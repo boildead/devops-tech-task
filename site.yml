@@ -1,0 +1,5 @@
+---
+- ansible.builtin.import_playbook: docker_install.yml
+- ansible.builtin.import_playbook: grafana_install.yml
+- ansible.builtin.import_playbook: prom_stack_install.yml
+- ansible.builtin.import_playbook: cadvisor_install.yml

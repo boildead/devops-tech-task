@@ -1,0 +1,54 @@
+---
+- name: Install Prometheus, Node Exporter, Alertmanager
+  hosts: production
+  become: true
+
+  tasks:
+    - name: Create Prometheus Docker volume
+      community.docker.docker_volume:
+        name: prometheus-data
+
+    - name: Create Alertmanager Docker volume
+      community.docker.docker_volume:
+        name: alertmanager-data
+
+    - name: Start Prometheus container
+      community.docker.docker_container:
+        name: prometheus
+        image: prom/prometheus:{{ prometheus_version }}
+        restart_policy: on-failure
+        networks:
+          - name: monitoring
+        volumes:
+          - prometheus-data:/etc/prometheus
+        command:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus'
+
+    - name: Start Node Exporter container
+      community.docker.docker_container:
+        name: node-exporter
+        image: prom/node-exporter:{{ node_exporter_version }}
+        restart_policy: on-failure
+        networks:
+          - name: monitoring
+        volumes:
+          - /proc:/host/proc:ro
+          - /sys:/host/sys:ro
+          - /:/rootfs:ro
+        command:
+          - '--path.procfs=/host/proc'
+          - '--path.sysfs=/host/sys'
+          - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+
+    - name: Start Alert Manager container
+      community.docker.docker_container:
+        name: alertmanager
+        image: prom/alertmanager:{{ alertmanager_version }}
+        restart_policy: on-failure
+        networks:
+          - name: monitoring
+        volumes:
+          - alertmanager-data:/etc/alertmanager
+        command:
+          - '--config.file=/etc/alertmanager/config.yml'

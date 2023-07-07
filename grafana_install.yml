@@ -1,0 +1,21 @@
+---
+- name: Install Grafana
+  hosts: production
+  become: true
+
+  tasks:
+    - name: Create Grafana Docker volume
+      community.docker.docker_volume:
+        name: grafana-data
+
+    - name: Start Grafana container
+      community.docker.docker_container:
+        name: grafana
+        image: grafana/grafana:{{ grafana_version }}
+        restart_policy: on-failure
+        networks:
+          - name: monitoring
+        ports:
+          - "3000:3000"
+        volumes:
+          - grafana-data:/var/lib/grafana
