@@ -1,0 +1,80 @@
+---
+- name: Test infrastructure after provisioning
+  hosts: production
+  become: true
+
+  tasks:
+    - name: Get services facts
+      ansible.builtin.service_facts:
+
+    - name: Check if Docker is running
+      ansible.builtin.fail:
+        msg: Docker Daemon is not running
+      when: services['docker'].state != 'running'
+
+    - name: Retrieve Docker container info
+      community.docker.docker_container_info:
+        name: "{{ item }}"
+      register: result
+      loop:
+        - grafana
+        - prometheus
+        - alertmanager
+        - loki
+        - cadvisor
+        - node-exporter
+      failed_when: result.container['State']['Status'] != 'running'
+
+    - name: Check if Grafana is running and accessible from outside
+      ansible.builtin.wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 3000
+        delay: 5
+        timeout: 320
+      delegate_to: localhost
+      register: result
+      until: result is succeeded
+      retries: 2
+      delay: 2
+      become: false
+
+    - name: Check if Prometheus is running and we have some metrics
+      ansible.builtin.uri:
+        url: http://localhost:9090/api/v1/query?query=up
+        return_content: true
+      register: result
+      until: result.json.data.result | length > 0
+      retries: 5
+      delay: 5
+
+    - name: Check if Alertmanager is running
+      ansible.builtin.uri:
+        url: http://localhost:9093
+        return_content: true
+      register: result
+      until: result.status == 200
+      retries: 5
+      delay: 5
+
+    - name: Check if Loki is running
+      ansible.builtin.uri:
+        url: http://localhost:3100/ready
+        return_content: true
+      register: result
+      until: result.content == "ready\n"
+      retries: 5
+      delay: 5
+
+    - name: Fetch metrics from cAdvisor
+      ansible.builtin.uri:
+        url: http://localhost:8080/metrics
+      until: result.status == 200
+      retries: 5
+      delay: 5
+
+    - name: Check if Node Exporter is running
+      ansible.builtin.uri:
+        url: http://localhost:9100/metrics
+      until: result.status == 200
+      retries: 5
+      delay: 5
