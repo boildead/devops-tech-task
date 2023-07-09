@@ -1,0 +1,53 @@
+---
+- name: Create Loki Docker volume
+  community.docker.docker_volume:
+    name: loki-data
+
+- name: Install loki docker plugin
+  community.docker.docker_plugin:
+    plugin_name: grafana/loki-docker-driver:{{ loki_version }}
+    alias: loki
+    state: enable
+
+- name: Configure Docker to send logs to Loki
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+          "log-driver": "loki",
+          "log-opts": {
+            "loki-url": "http://127.0.0.1:3100/loki/api/v1/push",
+            "loki-external-labels": "job=docker",
+            "loki-retries": "2",
+            "loki-max-backoff": "800ms",
+            "loki-timeout": "1s"
+          },
+          "metrics-addr" : "0.0.0.0:9323"
+      }
+    mode: '0644'
+  notify: Restart Docker
+
+- name: Start Loki container
+  community.docker.docker_container:
+    name: loki
+    image: grafana/loki:{{ loki_version }}
+    restart_policy: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3100"
+    networks:
+      - name: '{{ docker_network_name }}'
+    volumes:
+      - loki-data:/tmp/loki
+    state: started
+  register: loki_container
+
+- name: Start promtail container
+  community.docker.docker_container:
+    name: promtail
+    image: grafana/promtail:{{ promtail_version }}
+    restart_policy: unless-stopped
+    networks:
+      - name: '{{ docker_network_name }}'
+    volumes:
+      - /var/log:/var/log
+    state: started

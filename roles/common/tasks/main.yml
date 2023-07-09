@@ -1,0 +1,20 @@
+---
+- name: Install Docker
+  ansible.builtin.import_tasks: docker_install.yml
+  tags: docker
+
+- name: Install loki promtail
+  ansible.builtin.import_tasks: loki_promtail_install.yml
+  tags: loki_promtail
+
+- name: Install cAdvisor
+  ansible.builtin.import_tasks: cadvisor_install.yml
+  tags: cadvisor
+
+- name: Install prom stack
+  ansible.builtin.import_tasks: prom_stack_install.yml
+  tags: prom_stack
+
+- name: Install Grafana
+  ansible.builtin.import_tasks: grafana_install.yml
+  tags: grafana

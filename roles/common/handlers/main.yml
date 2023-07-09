@@ -1,0 +1,25 @@
+---
+- name: Restart Docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+
+- name: Restart Grafana container
+  community.docker.docker_container:
+    name: grafana
+    restart: true
+
+- name: Restart Prometheus
+  community.docker.docker_container:
+    name: prometheus
+    restart: true
+
+- name: Restart Node Exporter
+  community.docker.docker_container:
+    name: node-exporter
+    restart: true
+
+- name: Restart Alert Manager
+  community.docker.docker_container:
+    name: alertmanager
+    restart: true

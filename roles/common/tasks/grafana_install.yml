@@ -1,0 +1,50 @@
+---
+- name: Create Grafana datasources directory
+  ansible.builtin.file:
+    path: "/etc/grafana/provisioning/datasources"
+    state: directory
+    mode: '0755'
+
+- name: Create Grafana dashboards directory
+  ansible.builtin.file:
+    path: "/etc/grafana/provisioning/dashboards"
+    state: directory
+    mode: '0755'
+
+- name: Copy Grafana datasource file
+  ansible.builtin.copy:
+    src: ds.yml
+    dest: /etc/grafana/provisioning/datasources/ds.yml
+    mode: '0644'
+  notify: Restart Grafana container
+
+- name: Copy Grafana dashboard provider
+  ansible.builtin.copy:
+    src: provider.yml
+    dest: /etc/grafana/provisioning/dashboards/provider.yml
+    mode: '755'
+  notify: Restart Grafana container
+
+- name: Copy Grafana dashboard
+  ansible.builtin.copy:
+    src: node_exporter_use_method.json
+    dest: /etc/grafana/provisioning/dashboards/node_exporter_use_method.json
+    mode: '755'
+  notify: Restart Grafana container
+
+- name: Start Grafana container
+  community.docker.docker_container:
+    name: grafana
+    image: grafana/grafana:{{ grafana_version }}
+    restart_policy: unless-stopped
+    networks:
+      - name: '{{ docker_network_name }}'
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - /etc/grafana/provisioning:/etc/grafana/provisioning
+    state: started
+    env:
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+      GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
