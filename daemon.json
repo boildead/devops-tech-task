@@ -1,0 +1,9 @@
+{
+    "log-driver": "loki",
+    "log-opts": {
+      "loki-url": "http://loki:3100/loki/api/v1/push",
+      "loki-external-labels": "job=docker",
+      "loki-batch-size": "100",
+      "loki-batch-timeout": "5s"
+    }
+}

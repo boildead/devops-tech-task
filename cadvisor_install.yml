@@ -18,3 +18,4 @@
           - "/var/lib/docker/:/var/lib/docker:ro"
         networks:
           - name: monitoring
+        state: started
