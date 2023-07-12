@@ -1,2 +1,22 @@
 ---
-# defaults file for common
+docker_prefix: common
+docker_network_name: monitoring
+grafana_admin_password: "{{ lookup('ansible.builtin.env', 'GRAFANA_ADMIN_PASSWORD') }}"
+grafana_version: 9.5.5
+
+node_exporter_version: v1.6.0
+cadvisor_version: v0.37.5
+loki_version: 2.8.2
+promtail_version: 2.8.2
+
+prometheus_version: v2.45.0
+prometheus_query_max_samples: 50000000
+prometheus_cpus: 2
+prometheus_memory: 3G
+
+alertmanager_version: v0.25.0
+alertmanager_repeat_interval: 1h
+alertmanager_email_host: smtp.gmail.com:587
+alertmanager_email_from: alertmanager@{{ ansible_fqdn }}
+alertmanager_email_username: user@gmail.com
+alertmanager_email_password: "{{ lookup('ansible.builtin.env', 'ALERTMANAGER_EMAIL_PASSWORD') }}"

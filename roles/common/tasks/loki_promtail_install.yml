@@ -1,7 +1,7 @@
 ---
 - name: Create Loki Docker volume
   community.docker.docker_volume:
-    name: loki-data
+    name: '{{ docker_prefix }}-loki-data'
 
 - name: Install loki docker plugin
   community.docker.docker_plugin:
@@ -21,15 +21,14 @@
             "loki-retries": "2",
             "loki-max-backoff": "800ms",
             "loki-timeout": "1s"
-          },
-          "metrics-addr" : "0.0.0.0:9323"
+          }
       }
     mode: '0644'
   notify: Restart Docker
 
 - name: Start Loki container
   community.docker.docker_container:
-    name: loki
+    name: '{{ docker_prefix }}-loki'
     image: grafana/loki:{{ loki_version }}
     restart_policy: unless-stopped
     ports:
@@ -43,7 +42,7 @@
 
 - name: Start promtail container
   community.docker.docker_container:
-    name: promtail
+    name: '{{ docker_prefix }}-promtail'
     image: grafana/promtail:{{ promtail_version }}
     restart_policy: unless-stopped
     networks:

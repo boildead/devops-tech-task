@@ -1,0 +1,14 @@
+route:
+  receiver: 'mail'
+  repeat_interval: '{{ alertmanager_repeat_interval }}'
+  group_by: [ alertname ]
+
+
+receivers:
+  - name: 'mail'
+    email_configs:
+      - smarthost: '{{ alertmanager_email_host }}'
+        auth_username: '{{ alertmanager_email_user }}'
+        auth_password: '{{ alertmanager_email_password }}'
+        from: '{{ alertmanager_email_from }}'
+        to: '{{ alertmanager_email_to }}'

@@ -1,0 +1,39 @@
+rule_files:
+- 'node_alerts.yml'
+evaluation_interval: 1m
+tests:
+- interval: 1m
+  input_series:
+  - series: 'node_filefd_allocated{job="node"}'
+    values: '8000x16'
+  - series: 'node_filefd_maximum{job="node"}'
+    values: '10000x16'
+  alert_rule_test:
+  - eval_time: 16m
+    alertname: NodeFileDescriptorLimit
+    exp_alerts:
+    - exp_labels:
+        severity: 'warning'
+        job: 'node'
+      exp_annotations:
+        description: "File descriptors limit at  is currently at 80.00%."
+        summary: "Kernel is predicted to exhaust file descriptors limit soon."
+
+
+- interval: 1m
+  input_series:
+  - series: 'node_nf_conntrack_entries{job="node"}'
+    values: '800'
+  - series: 'node_nf_conntrack_entries_limit{job="node"}'
+    values: '1000'
+
+  alert_rule_test:
+  - eval_time: 1m
+    alertname: NodeHighNumberConntrackEntriesUsed
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        job: node
+      exp_annotations:
+        description: '80% of conntrack entries are used.'
+        summary: 'Number of conntrack are getting close to the limit.'

@@ -1,0 +1,20 @@
+import testinfra
+
+def test_docker_running_and_enabled(host):
+    docker = host.service("docker")
+    assert docker.is_running
+    assert docker.is_enabled
+
+def test_grafana_port_is_open(host):
+    port = 3000
+    grafana_container = host.docker("{{ docker_prefix }}-grafana")
+
+    assert grafana_container.is_running
+    assert host.socket("tcp://0.0.0.0:{}".format(port)).is_listening
+
+def test_prometheus_port_is_open(host):
+    port = 9090
+    prometheus_container = host.docker("{{ docker_prefix }}-prometheus")
+
+    assert prometheus_container.is_running
+    assert host.socket("tcp://127.0.0.1:{}".format(port)).is_listening

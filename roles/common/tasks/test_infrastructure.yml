@@ -1,0 +1,22 @@
+---
+- name: Put test file on hosts
+  ansible.builtin.template:
+    src: test_infra.py.j2
+    dest: /tmp/testfile.py
+    mode: '0644'
+  become: true
+
+- name: Run testinfra
+  ansible.builtin.command: pytest -v /tmp/testfile.py
+  register: output
+  
+- name: Testinfura output
+  debug:
+    msg: "{{ output.stdout }}\n"
+
+
+- name: Cleanup test file
+  ansible.builtin.file:
+    path: /tmp/testfile.py
+    state: absent
+  become: true

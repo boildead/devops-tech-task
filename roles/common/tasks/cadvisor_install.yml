@@ -1,7 +1,7 @@
 ---
 - name: Run cAdvisor container
   community.docker.docker_container:
-    name: cadvisor
+    name: '{{ docker_prefix }}-cadvisor'
     image: gcr.io/cadvisor/cadvisor:{{ cadvisor_version }}
     restart_policy: unless-stopped
     ports:

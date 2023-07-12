@@ -18,3 +18,7 @@
 - name: Install Grafana
   ansible.builtin.import_tasks: grafana_install.yml
   tags: grafana
+
+- name: Run tests
+  ansible.builtin.import_tasks: test_infrastructure.yml
+  tags: test

@@ -33,6 +33,11 @@
     name: docker
     state: present
 
+- name: Install pytest-testinfra
+  ansible.builtin.pip:
+    name: pytest-testinfra
+    state: present
+
 - name: Create Docker network
   community.docker.docker_network:
     name: '{{ docker_network_name }}'

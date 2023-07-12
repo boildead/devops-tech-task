@@ -13,6 +13,11 @@
   notify:
     - Restart Prometheus
 
+- name: Test Prometheus alert rules
+  delegate_to: localhost
+  ansible.builtin.shell: promtool test rules roles/common/files/node_alerts_test.yml
+  become: false
+
 - name: Copy Prometheus rules file
   ansible.builtin.copy:
     src: node_rules.yml
@@ -20,6 +25,7 @@
     mode: '0644'
   notify:
     - Restart Prometheus
+
 
 - name: Copy Prometheus alerts file
   ansible.builtin.copy:
@@ -31,7 +37,7 @@
 
 - name: Create Alertmanager Docker volume
   community.docker.docker_volume:
-    name: alertmanager-data
+    name: '{{ docker_prefix }}-alertmanager-data'
 
 - name: Create Alertmanager configuration directory
   ansible.builtin.file:
@@ -40,8 +46,8 @@
     mode: '0755'
 
 - name: Copy Alertmanager configuration file
-  ansible.builtin.copy:
-    src: alertmanager.yml
+  ansible.builtin.template:
+    src: alertmanager.yml.j2
     dest: /etc/alertmanager/config.yml
     mode: '0644'
   notify:
@@ -49,13 +55,13 @@
 
 - name: Start Alert Manager container
   community.docker.docker_container:
-    name: alertmanager
+    name: '{{ docker_prefix }}-alertmanager'
     image: prom/alertmanager:{{ alertmanager_version }}
     restart_policy: unless-stopped
     networks:
       - name: '{{ docker_network_name }}'
     volumes:
-      - alertmanager-data:/data
+      - '{{ docker_prefix }}-alertmanager-data:/data'
       - /etc/alertmanager/:/etc/alertmanager
     ports:
       - '127.0.0.1:9093:9093'
@@ -65,7 +71,7 @@
 
 - name: Start Node Exporter container
   community.docker.docker_container:
-    name: node-exporter
+    name: '{{ docker_prefix }}-node-exporter'
     image: prom/node-exporter:{{ node_exporter_version }}
     restart_policy: unless-stopped
     networks:
@@ -84,7 +90,7 @@
 
 - name: Start Prometheus container
   community.docker.docker_container:
-    name: prometheus
+    name: '{{ docker_prefix }}-prometheus'
     image: prom/prometheus:{{ prometheus_version }}
     restart_policy: unless-stopped
     networks:
@@ -96,5 +102,7 @@
       - /var/run/docker.sock:/var/run/docker.sock
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--query.max-samples={{ prometheus_query_max_samples }}'
     state: started
-  register: container_info
+    cpus: '{{ prometheus_cpus }}'
+    memory: '{{ prometheus_memory }}'
