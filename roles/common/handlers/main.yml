@@ -6,20 +6,24 @@
 
 - name: Restart Grafana container
   community.docker.docker_container:
-    name: grafana
+    name: '{{ docker_prefix }}-grafana'
     restart: true
 
 - name: Restart Prometheus
   community.docker.docker_container:
-    name: prometheus
+    name: '{{ docker_prefix }}-prometheus'
     restart: true
 
 - name: Restart Node Exporter
   community.docker.docker_container:
-    name: node-exporter
+    name: '{{ docker_prefix }}-node-exporter'
     restart: true
 
 - name: Restart Alert Manager
   community.docker.docker_container:
-    name: alertmanager
+    name: '{{ docker_prefix }}-alertmanager'
     restart: true
+
+- name: Test Prometheus alert rules
+  ansible.builtin.shell: docker run --rm -v /tmp/node_alerts_test.yml:/tmp/node_alerts_test.yml -v /etc/prometheus/node_alerts.yml:/tmp/node_alerts.yml -w /tmp --entrypoint /bin/promtool prom/prometheus:{{ prometheus_version }} test rules node_alerts_test.yml
+  notify: Restart Prometheus

@@ -5,6 +5,28 @@
     state: directory
     mode: '0755'
 
+- name: Pull Prometheus Docker image
+  docker_image:
+    name: prom/prometheus:{{ prometheus_version }}
+    source: pull
+
+- name: Copy Prometheus alerts file
+  ansible.builtin.copy:
+    src: node_alerts.yml
+    dest: /etc/prometheus/node_alerts.yml
+    mode: '0644'
+  notify:
+    - Test Prometheus alert rules
+
+- name: Copy Prometheus alert test file
+  ansible.builtin.copy:
+    src: node_alerts_test.yml
+    dest: /tmp/node_alerts_test.yml
+    mode: '0644'
+
+- name: Flush handlers
+  meta: flush_handlers
+
 - name: Copy Prometheus configuration file
   ansible.builtin.template:
     src: prometheus.yml.j2
@@ -13,24 +35,10 @@
   notify:
     - Restart Prometheus
 
-- name: Test Prometheus alert rules
-  delegate_to: localhost
-  ansible.builtin.shell: promtool test rules roles/common/files/node_alerts_test.yml
-  become: false
-
 - name: Copy Prometheus rules file
   ansible.builtin.copy:
     src: node_rules.yml
     dest: /etc/prometheus/node_rules.yml
-    mode: '0644'
-  notify:
-    - Restart Prometheus
-
-
-- name: Copy Prometheus alerts file
-  ansible.builtin.copy:
-    src: node_alerts.yml
-    dest: /etc/prometheus/node_alerts.yml
     mode: '0644'
   notify:
     - Restart Prometheus

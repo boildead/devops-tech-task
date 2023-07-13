@@ -2,7 +2,6 @@
 - Requires Ubuntu 20.04 server with sudo privileges for remote user
 - Ansible 8.0 or higher
 - Tested on Ubuntu 20.04 server
-- promtool available in PATH to test alert rules
 
 ## Features
 - Installs Grafana, Prometheus, AlertManager, Loki, Node-Exporter, Cadvisor in Docker containers
